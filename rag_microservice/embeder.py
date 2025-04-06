@@ -11,10 +11,13 @@ SAFE_MARGIN = 18000
 
 
 class Embedder:
+    DOCUMENT_RETRIEVAL_TASK_TYPE = "RETRIEVAL_DOCUMENT"
+    QUERY_RETRIEVAL_TASK_TYPE = "RETRIEVAL_QUERY"
+
     def __init__(
         self,
-        embedding_model: str = "text-embedding-005",
-        embedding_dimension: int = 512,
+        embedding_model: str,
+        embedding_dimension: int,
     ) -> None:
         self.__dimension = embedding_dimension
         self.client = genai.Client(http_options=HttpOptions(api_version="v1"))
@@ -30,45 +33,40 @@ class Embedder:
     def embed_documents(self, documents: list[str]) -> list[list[float]]:
         response = []
         document_chunks_batch = []
-        current_tokens = 0
+        number_of_tokens_to_embede = 0
         for chunk in documents:
-            chunk_tokens = self.count_tokens_estimate(chunk)
+            chunk_tokens_number = self.count_tokens_estimate(chunk)
 
-            if current_tokens + chunk_tokens > SAFE_MARGIN:
+            if number_of_tokens_to_embede + chunk_tokens_number > SAFE_MARGIN:
                 if document_chunks_batch:
                     self.request_controller.attempt_request()
-                    response += self.client.models.embed_content(
-                        model=self.model,
-                        contents=document_chunks_batch,
-                        config=EmbedContentConfig(
-                            task_type="RETRIEVAL_DOCUMENT",
-                            output_dimensionality=self.__dimension,
-                        ),
-                    ).embeddings
+                    response += self.embed_document_chunks(document_chunks_batch)
                     document_chunks_batch = []
 
             document_chunks_batch.append(self.preprocess_text(chunk))
-            current_tokens += chunk_tokens
+            number_of_tokens_to_embede += chunk_tokens_number
 
         if document_chunks_batch:
             self.request_controller.attempt_request()
-            response += self.client.models.embed_content(
-                model=self.model,
-                contents=document_chunks_batch,
-                config=EmbedContentConfig(
-                    task_type="RETRIEVAL_DOCUMENT",
-                    output_dimensionality=self.__dimension,
-                ),
-            ).embeddings
-            document_chunks_batch = []
+            response += self.embed_document_chunks(document_chunks_batch)
         return [embedding.values for embedding in response]
+
+    def embed_document_chunks(self, document_chunks_batch: list) -> list[list[float]]:
+        return self.client.models.embed_content(
+            model=self.model,
+            contents=document_chunks_batch,
+            config=EmbedContentConfig(
+                task_type=self.DOCUMENT_RETRIEVAL_TASK_TYPE,
+                output_dimensionality=self.__dimension,
+            ),
+        ).embeddings
 
     def embed_query(self, question: str) -> list[float]:
         response = self.client.models.embed_content(
             model=self.model,
             contents=[question],
             config=EmbedContentConfig(
-                task_type="RETRIEVAL_QUERY",
+                task_type=self.QUERY_RETRIEVAL_TASK_TYPE,
                 output_dimensionality=self.__dimension,
             ),
         )
