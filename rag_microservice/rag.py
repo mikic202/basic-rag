@@ -9,15 +9,14 @@ from langchain_community.vectorstores.utils import filter_complex_metadata
 from langchain_community.vectorstores import Chroma
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
-from dotenv import load_dotenv
 import json
 
 from embeder import Embedder
-
-
-PROMTPT = "You are a helpful assistant. You will be provided with 4 PDF document chunks and a question. Your task is to answer the question based on the content of the PDF document and only those PDF documents. If the answer is not present in the document, respond with 'I don't know'. Question: {question} PDF document chunks: {context}"
-FLASHCARD_PROMPT = """Based on this context create {number_of_flashcards} flash card for users to learn from, in json format where Q: is question and A: is answer (for example {{Q: "what is 2 + 2", A: "2"}}). Context: {context}"""
-MULTIPL_CHOICE_QUESTIONS_PROMPT = """Based on this context create {number_of_questions} multiple choice questions (4 answers each, and there can be more than one possible answer) for users to learn from, in json format where Q: is question, O: is dictionary of options and A: is list of possible answers (for example {{Q: "What is the capital of France?", O: {{"a": "London", "b": "Paris", "c": "Berlin", "d": "Rome"}}, A: ["b"]}}). Context: {context}"""
+from prompts import (
+    QUESTION_PROMTPT,
+    FLASHCARD_PROMPT,
+    MULTIPL_CHOICE_QUESTIONS_PROMPT,
+)
 
 
 class RAG:
@@ -30,16 +29,10 @@ class RAG:
         )
         self.__retriever = None
 
-    async def __call__(self, question: str, user_id: int) -> str:
+    def __call__(self, question: str, user_id: int) -> str:
         context = self.most_suiting_pdf(question, user_id)
-        # print(f"Context: {context}")
-        print(f"{len(context)}")
-        print("___________________________________")
-        print(
-            f"Question: {PROMTPT.format(question=question,context=[chunk.page_content for chunk in context],)}"
-        )
         response = self.__generative_multimodal_model.generate_content(
-            PROMTPT.format(
+            QUESTION_PROMTPT.format(
                 question=question,
                 context=[chunk.page_content for chunk in context],
             )
@@ -75,7 +68,7 @@ class RAG:
 
         return self.__retriever.invoke(query)
 
-    async def delete_pdf_embeddings(self, filename: str, user_id: int) -> None:
+    def delete_pdf_embeddings(self, filename: str, user_id: int) -> None:
         collection = Chroma(
             embedding_function=self.embedding_model,
             persist_directory=f"chroma_db/{user_id}",
@@ -94,7 +87,7 @@ class RAG:
             collection.delete(ids=ids_to_delete)
             collection.persist()
 
-    async def get_flashcards(
+    def get_flashcards(
         self, scenario: str, user_id: int, number_of_flashcards: int
     ) -> str:
         context = self.most_suiting_pdf(scenario, user_id)
@@ -106,7 +99,7 @@ class RAG:
         )
         return json.loads("\n".join(response.text.split("\n")[1:-1]))
 
-    async def get_multiple_choice_questions(
+    def get_multiple_choice_questions(
         self, scenario: str, user_id: int, number_of_questions: int
     ) -> str:
         context = self.most_suiting_pdf(scenario, user_id)
@@ -119,37 +112,37 @@ class RAG:
         return json.loads("\n".join(response.text.split("\n")[1:-1]))
 
 
-async def main():
-    load_dotenv()
-    _AR_PROJECT_ID = os.getenv("_AR_PROJECT_ID")
-    _DEPLOY_REGION = os.getenv("_DEPLOY_REGION")
+# async def main():
+#     load_dotenv()
+#     _AR_PROJECT_ID = os.getenv("_AR_PROJECT_ID")
+#     _DEPLOY_REGION = os.getenv("_DEPLOY_REGION")
 
-    rag = RAG(
-        model_ai=os.getenv("_AI_CHATBOT"),
-        project_id=_AR_PROJECT_ID,
-        region=_DEPLOY_REGION,
-    )
+#     rag = RAG(
+#         model_ai=os.getenv("_AI_CHATBOT"),
+#         project_id=_AR_PROJECT_ID,
+#         region=_DEPLOY_REGION,
+#     )
 
-    file = "/home/mikic202/hackathon/Backend/backend/rag/1_PDF_chapter_1.pdf"
-    # file = "/home/mikic202/hackathon/Backend/backend/rag/2_PDF_chapters_1_to_5.pdf"
-    # file = "/home/mikic202/hackathon/Backend/backend/rag/3_PDF_full.pdf"
-    # taks = asyncio.create_task(rag.ingest_pdf(file, 1))
-    rag.ingest_pdf(file, 1)
-    # while not taks.done():
-    #     print("Ingesting PDF...")
-    #     await asyncio.sleep(1)
-    question = "When was linux introduced?"
-    # qt = asyncio.create_task(rag.get_multiple_choice_questions(question, 1, 5))
-    # qt = asyncio.create_task(rag.get_flashcards(question, 1, 5))
-    qt = asyncio.create_task(rag(question, 1))
-    print("___________________________________")
-    while not qt.done():
-        print(f"Progress: {1}")
-        await asyncio.sleep(1)
-    print(f"Progress: {qt.result()}")
+#     file = "/home/mikic202/hackathon/Backend/backend/rag/1_PDF_chapter_1.pdf"
+#     # file = "/home/mikic202/hackathon/Backend/backend/rag/2_PDF_chapters_1_to_5.pdf"
+#     # file = "/home/mikic202/hackathon/Backend/backend/rag/3_PDF_full.pdf"
+#     # taks = asyncio.create_task(rag.ingest_pdf(file, 1))
+#     rag.ingest_pdf(file, 1)
+#     # while not taks.done():
+#     #     print("Ingesting PDF...")
+#     #     await asyncio.sleep(1)
+#     question = "When was linux introduced?"
+#     # qt = asyncio.create_task(rag.get_multiple_choice_questions(question, 1, 5))
+#     # qt = asyncio.create_task(rag.get_flashcards(question, 1, 5))
+#     qt = asyncio.create_task(rag(question, 1))
+#     print("___________________________________")
+#     while not qt.done():
+#         print(f"Progress: {1}")
+#         await asyncio.sleep(1)
+#     print(f"Progress: {qt.result()}")
 
-    # print(a.result())
+#     # print(a.result())
 
 
-if __name__ == "__main__":
-    asyncio.run(main())
+# if __name__ == "__main__":
+#     asyncio.run(main())
