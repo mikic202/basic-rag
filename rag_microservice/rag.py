@@ -1,5 +1,3 @@
-import vertexai
-
 from vertexai.preview.generative_models import GenerativeModel
 from langchain_community.document_loaders import PyPDFLoader
 
@@ -17,13 +15,10 @@ class RAG:
     def __init__(
         self,
         model_ai: str,
-        project_id: str,
-        region: str,
         embedding_manager: EmbeddingsManager,
         chunks_in_context: int,
         chunks_similarity_treshold: float,
     ) -> None:
-        vertexai.init(project=project_id, location=region)
         self.__generative_multimodal_model = GenerativeModel(model_ai)
         self.__embedding_manager = embedding_manager
         self.__chunks_similarity_treshold = chunks_similarity_treshold
@@ -45,7 +40,7 @@ class RAG:
         return response.text
 
     def ingest_pdf(self, filename: str, user_id: int) -> None:
-        docs = PyPDFLoader(file_path=filename).load()
+        docs = PyPDFLoader(file_path=filename)
         self.__embedding_manager.ingest_pdf(
             docs,
             user_id,

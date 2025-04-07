@@ -47,7 +47,9 @@ class EmbeddingsManager:
             embedding_function=self.__embedder,
             persist_directory=f"{self.__store_directory}/{user_id}",
         )
-        chunks = filter_complex_metadata(self.text_splitter.split_documents(file))
+        chunks = filter_complex_metadata(
+            self.text_splitter.split_documents(file.load())
+        )
         for chunk in chunks:
             chunk.metadata["source"] = os.path.basename(file.source)
         vector_store.add_documents(chunks)
