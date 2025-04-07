@@ -1,16 +1,10 @@
-import os
-import asyncio
-
 import vertexai
 
 from vertexai.preview.generative_models import GenerativeModel
 from langchain_community.document_loaders import PyPDFLoader
-from langchain_community.vectorstores.utils import filter_complex_metadata
-from langchain_community.vectorstores import Chroma
 
 import json
 
-from embeder import Embedder
 from embedings_mamager import EmbeddingsManager
 from prompts import (
     QUESTION_PROMTPT,
@@ -51,7 +45,6 @@ class RAG:
         return response.text
 
     def ingest_pdf(self, filename: str, user_id: int) -> None:
-
         docs = PyPDFLoader(file_path=filename).load()
         self.__embedding_manager.ingest_pdf(
             docs,
