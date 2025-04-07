@@ -26,13 +26,22 @@ class RAG:
         project_id: str,
         region: str,
         embedding_manager: EmbeddingsManager,
+        chunks_in_context: int,
+        chunks_similarity_treshold: float,
     ) -> None:
         vertexai.init(project=project_id, location=region)
         self.__generative_multimodal_model = GenerativeModel(model_ai)
         self.__embedding_manager = embedding_manager
+        self.__chunks_similarity_treshold = chunks_similarity_treshold
+        self.__chunks_in_context = chunks_in_context
 
     def __call__(self, question: str, user_id: int) -> str:
-        context = self.__embedding_manager.get_closest_chunks(question, user_id, 4, 0.3)
+        context = self.__embedding_manager.get_closest_chunks(
+            question,
+            user_id,
+            self.__chunks_in_context,
+            self.__chunks_similarity_treshold,
+        )
         response = self.__generative_multimodal_model.generate_content(
             QUESTION_PROMTPT.format(
                 question=question,
@@ -55,7 +64,12 @@ class RAG:
     def get_flashcards(
         self, scenario: str, user_id: int, number_of_flashcards: int
     ) -> str:
-        context = self.__embedding_manager.get_closest_chunks(scenario, user_id, 4, 0.3)
+        context = self.__embedding_manager.get_closest_chunks(
+            scenario,
+            user_id,
+            self.__chunks_in_context,
+            self.__chunks_similarity_treshold,
+        )
         response = self.__generative_multimodal_model.generate_content(
             FLASHCARD_PROMPT.format(
                 context=[chunk.page_content for chunk in context],
@@ -67,7 +81,12 @@ class RAG:
     def get_multiple_choice_questions(
         self, scenario: str, user_id: int, number_of_questions: int
     ) -> str:
-        context = self.__embedding_manager.get_closest_chunks(scenario, user_id, 4, 0.3)
+        context = self.__embedding_manager.get_closest_chunks(
+            scenario,
+            user_id,
+            self.__chunks_in_context,
+            self.__chunks_similarity_treshold,
+        )
         response = self.__generative_multimodal_model.generate_content(
             MULTIPL_CHOICE_QUESTIONS_PROMPT.format(
                 context=[chunk.page_content for chunk in context],

@@ -9,11 +9,17 @@ from embeder import Embedder
 
 
 class EmbeddingsManager:
-    def __init__(self, store_directory: str, embedder: Embedder) -> None:
+    def __init__(
+        self,
+        store_directory: str,
+        embedder: Embedder,
+        chunk_size: int,
+        chunk_overlap: int,
+    ) -> None:
         self.__embedder = embedder
         self.__store_directory = store_directory
         self.text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=2048, chunk_overlap=100
+            chunk_size=chunk_size, chunk_overlap=chunk_overlap
         )
 
     def get_closest_chunks(
