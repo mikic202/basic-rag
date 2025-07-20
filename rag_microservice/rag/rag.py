@@ -3,8 +3,8 @@ from langchain_community.document_loaders import PyPDFLoader
 
 import json
 
-from embedings_mamager import EmbeddingsManager
-from prompts import (
+from rag_microservice.embeder.embedings_mamager import EmbeddingsManager
+from rag_microservice.rag.prompts import (
     QUESTION_PROMTPT,
     FLASHCARD_PROMPT,
     MULTIPL_CHOICE_QUESTIONS_PROMPT,

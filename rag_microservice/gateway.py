@@ -1,7 +1,7 @@
 from flask import Flask, Response
-from rag import RAG
-from embedings_mamager import EmbeddingsManager
-from embeder import Embedder
+from rag_microservice.rag.rag import RAG
+from rag_microservice.embeder.embedings_mamager import EmbeddingsManager
+from rag_microservice.embeder.embeder import Embedder
 import vertexai
 
 

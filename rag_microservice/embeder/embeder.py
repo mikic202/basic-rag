@@ -1,6 +1,6 @@
 from vertexai.language_models import TextEmbeddingModel
 
-from request_controller import RequestController
+from rag_microservice.embeder.request_controller import RequestController
 
 SAFE_MARGIN = 18000
 

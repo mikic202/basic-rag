@@ -5,7 +5,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 import os
 
-from embeder import Embedder
+from rag_microservice.embeder.embeder import Embedder
 
 
 class EmbeddingsManager:
