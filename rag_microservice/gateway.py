@@ -1,6 +1,6 @@
 from flask import Flask, Response
 from rag_microservice.rag.rag import RAG
-from rag_microservice.embeder.embedings_mamager import EmbeddingsManager
+from rag_microservice.embeder.local_embedings_manager import LocalEmbeddingsManager
 from rag_microservice.embeder.embeder import Embedder
 import vertexai
 
@@ -24,7 +24,7 @@ class Gateway(Flask):
         )
         vertexai.init(project="basic-rag-456110", location="europe-west1")
         self.__embedder = Embedder("text-embedding-005", 512)
-        self.__embedding_manager = EmbeddingsManager(
+        self.__embedding_manager = LocalEmbeddingsManager(
             "chroma_db", self.__embedder, 4096, 100
         )
 

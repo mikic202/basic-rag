@@ -6,9 +6,10 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 import os
 
 from rag_microservice.embeder.embeder import Embedder
+from rag_microservice.embeder.embedings_mamager import EmbeddingsManager
 
 
-class LocalEmbeddingsManager:
+class LocalEmbeddingsManager(EmbeddingsManager):
     def __init__(
         self,
         store_directory: str,
@@ -16,10 +17,11 @@ class LocalEmbeddingsManager:
         chunk_size: int,
         chunk_overlap: int,
     ) -> None:
-        self.__embedder = embedder
         self.__store_directory = store_directory
-        self.text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=chunk_size, chunk_overlap=chunk_overlap
+        super().__init__(
+            embedder=embedder,
+            chunk_size=chunk_size,
+            chunk_overlap=chunk_overlap,
         )
 
     def get_closest_chunks(
