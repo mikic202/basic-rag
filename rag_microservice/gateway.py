@@ -39,7 +39,9 @@ class Gateway(Flask):
         return Response("Hello, World!", status=200, mimetype="text/plain")
 
     def get_basic_llm_answer(self, question: str) -> str:
-        return f"Basic answer to your question: {question}"
+        return Response(
+            self.__rag.get_simple_answer(question), status=200, mimetype="text/plain"
+        )
 
     def get_rag_answer(self, question: str, user_id: int) -> str:
         return f"RAG answer to your question: {question} for user {user_id}"

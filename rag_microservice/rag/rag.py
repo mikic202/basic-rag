@@ -82,3 +82,6 @@ class RAG:
             )
         )
         return json.loads("\n".join(response.text.split("\n")[1:-1]))
+
+    def get_simple_answer(self, question: str) -> str:
+        return self.__generative_multimodal_model.generate_content(question).text
