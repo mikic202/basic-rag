@@ -8,7 +8,6 @@ import vertexai
 class Gateway(Flask):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.add_url_rule("hello", "hello", self.hello, methods=["GET"])
         self.add_url_rule("basic", "basic", self.get_basic_llm_answer, methods=["GET"])
         self.add_url_rule(
             "rag",
@@ -34,9 +33,8 @@ class Gateway(Flask):
             4,
             0.3,
         )
-
-    def hello(self):
-        return Response("Hello, World!", status=200, mimetype="text/plain")
+        self.__number_of_chunks = 4
+        self.__similarity_treshold = 0.3
 
     def get_basic_llm_answer(self, question: str) -> str:
         return Response(
@@ -44,7 +42,13 @@ class Gateway(Flask):
         )
 
     def get_rag_answer(self, question: str, user_id: int) -> str:
-        return f"RAG answer to your question: {question} for user {user_id}"
+        return Response(
+            self.__rag(
+                question, user_id, self.__number_of_chunks, self.__similarity_treshold
+            ),
+            status=200,
+            mimetype="text/plain",
+        )
 
     def add_user_file(self, user_id: int, file: str) -> str:
         return f"File {file} added for user {user_id}"
