@@ -5,8 +5,8 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 import os
 
-from rag_microservice.embeder.embeder import Embedder
-from rag_microservice.embeder.embedings_mamager import EmbeddingsManager
+from embeder.embeder import Embedder
+from embeder.embedings_mamager import EmbeddingsManager
 
 
 class LocalEmbeddingsManager(EmbeddingsManager):

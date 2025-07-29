@@ -2,7 +2,7 @@ from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from abc import ABC, abstractmethod
 
-from rag_microservice.embeder.embeder import Embedder
+from embeder.embeder import Embedder
 
 
 class EmbeddingsManager(ABC):
