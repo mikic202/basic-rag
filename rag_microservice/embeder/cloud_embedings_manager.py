@@ -6,15 +6,6 @@ import os
 from rag_microservice.embeder.embeder import Embedder
 
 
-engine = PostgresEngine.from_instance(
-    "project-id", "region", "my-instance", "my-database"
-)
-embedding_service = VertexAIEmbeddings(model_name="textembedding-gecko@003")
-vectorstore = PostgresVectorStore.create_sync(
-    engine, table_name="my-table", embedding_service=embedding_service
-)
-
-
 class EmbedingManager(EmbeddingsManager):
     def __init__(
         self, embedder: Embedder, chunk_size: int, chunk_overlap: int, database: str
