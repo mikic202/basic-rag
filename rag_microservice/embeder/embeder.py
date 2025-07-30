@@ -1,11 +1,12 @@
 from vertexai.language_models import TextEmbeddingModel
 
 from embeder.request_controller import RequestController
+from langchain_core.embeddings import Embeddings
 
 SAFE_MARGIN = 18000
 
 
-class Embedder:
+class Embedder(Embeddings):
     DOCUMENT_RETRIEVAL_TASK_TYPE = "RETRIEVAL_DOCUMENT"
     QUERY_RETRIEVAL_TASK_TYPE = "RETRIEVAL_QUERY"
 
@@ -23,6 +24,12 @@ class Embedder:
 
     def preprocess_text(self, text: str) -> str:
         return text.replace(". .", "").replace("  ", " ")
+
+    def embed_query(self, question: str) -> list[float]:
+        """Embed a query string into a vector."""
+        return self.__model.get_embeddings(
+            [self.preprocess_text(question)], output_dimensionality=self.__dimension
+        )[0].values
 
     def embed_documents(self, documents: list[str]) -> list[list[float]]:
         response = []
