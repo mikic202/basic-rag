@@ -1,6 +1,5 @@
 from embeder.embedings_mamager import EmbeddingsManager
 from langchain_google_cloud_sql_pg import PostgresVectorStore, PostgresEngine
-from langchain.embeddings import VertexAIEmbeddings
 import os
 
 from rag_microservice.embeder.embeder import Embedder
@@ -26,7 +25,7 @@ class EmbedingManager(EmbeddingsManager):
         similarity_treshold: float,
     ) -> list:
         vectorstore = PostgresVectorStore.create_sync(
-            engine,
+            self.__engine,
             table_name=f"user_{user_id}",
             embedding_service=self.__embedder,
             metadata_columns=["source"],
