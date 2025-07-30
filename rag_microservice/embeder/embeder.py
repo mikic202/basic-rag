@@ -25,12 +25,6 @@ class Embedder(Embeddings):
     def preprocess_text(self, text: str) -> str:
         return text.replace(". .", "").replace("  ", " ")
 
-    def embed_query(self, question: str) -> list[float]:
-        """Embed a query string into a vector."""
-        return self.__model.get_embeddings(
-            [self.preprocess_text(question)], output_dimensionality=self.__dimension
-        )[0].values
-
     def embed_documents(self, documents: list[str]) -> list[list[float]]:
         response = []
         document_chunks_batch = []
