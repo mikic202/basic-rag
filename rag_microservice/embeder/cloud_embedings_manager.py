@@ -5,7 +5,7 @@ import os
 from rag_microservice.embeder.embeder import Embedder
 
 
-class EmbedingManager(EmbeddingsManager):
+class CloudEmbedingManager(EmbeddingsManager):
     def __init__(
         self, embedder: Embedder, chunk_size: int, chunk_overlap: int, database: str
     ) -> None:

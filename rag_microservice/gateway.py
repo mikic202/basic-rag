@@ -1,10 +1,12 @@
 from flask import Flask, Response, request, redirect, flash
 from rag.rag import RAG
 from embeder.local_embedings_manager import LocalEmbeddingsManager
+from embeder.cloud_embedings_manager import CloudEmbedingManager
 from embeder.embeder import Embedder
 from werkzeug.utils import secure_filename
 from pathlib import Path
 import vertexai
+import os
 
 
 class Gateway(Flask):
@@ -26,20 +28,47 @@ class Gateway(Flask):
             methods=["POST"],
         )
         self.__file_directory = Path("user_files")
-        vertexai.init(project="basic-rag-456110", location="europe-west1")
-        self.__embedder = Embedder("text-embedding-005", 512)
-        self.__embedding_manager = LocalEmbeddingsManager(
-            "chroma_db", self.__embedder, 4096, 100
-        )
-
-        self.__rag = RAG(
-            "gemini-2.0-flash-001",
-            self.__embedding_manager,
-            4,
-            0.3,
-        )
+        self.__init_models_form_env()
         self.__number_of_chunks = 4
         self.__similarity_treshold = 0.3
+
+    def __init_models_form_env(self):
+        if os.environ.get("EMBEDDER_TYPE") == "cloud":
+            self.__embedder = Embedder(
+                os.environ.get("EMBEDDER_MODEL"),
+                int(os.environ.get("EMBEDDER_DIMENSIONS")),
+            )
+        else:
+            pass
+
+        if os.environ.get("EMBEDDINGS_MANAGER_TYPE") == "cloud":
+            self.__embedding_manager = CloudEmbedingManager(
+                os.environ.get("EMBEDDINGS_STROE_PATH"),
+                self.__embedder,
+                int(os.environ.get("CHUNK_SIZE", default=4096)),
+                int(os.environ.get("CHUNK_OVERLAP", default=100)),
+            )
+        else:
+            self.__embedding_manager = LocalEmbeddingsManager(
+                os.environ.get("EMBEDDINGS_STROE_PATH"),
+                self.__embedder,
+                int(os.environ.get("CHUNK_SIZE", default=4096)),
+                int(os.environ.get("CHUNK_OVERLAP", default=100)),
+            )
+
+        if os.environ.get("LLM_TYPE") == "cloud":
+            vertexai.init(
+                project=os.environ.get("PROJECT_ID"),
+                location=os.environ.get("REGION"),
+            )
+            self.__rag = RAG(
+                os.environ.get("LLM_MODEL"),
+                self.__embedding_manager,
+                4,
+                0.3,
+            )
+        else:
+            pass
 
     def get_basic_llm_answer(self, question: str) -> str:
         return Response(
