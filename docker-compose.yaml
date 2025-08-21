@@ -1,0 +1,8 @@
+services:
+  rag_microservice:
+    build: ./rag_microservice
+    ports:
+      - "5001:5001"
+    networks:
+      - rag_network
+    env_file: "rag_microservice/rag.env"

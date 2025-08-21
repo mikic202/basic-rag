@@ -1,18 +1,10 @@
-import os
-import asyncio
-
-import vertexai
-
 from vertexai.preview.generative_models import GenerativeModel
 from langchain_community.document_loaders import PyPDFLoader
-from langchain_community.vectorstores.utils import filter_complex_metadata
-from langchain_community.vectorstores import Chroma
 
 import json
 
-from embeder import Embedder
-from embedings_mamager import EmbeddingsManager
-from prompts import (
+from embeder.embedings_mamager import EmbeddingsManager
+from rag.prompts import (
     QUESTION_PROMTPT,
     FLASHCARD_PROMPT,
     MULTIPL_CHOICE_QUESTIONS_PROMPT,
@@ -23,13 +15,10 @@ class RAG:
     def __init__(
         self,
         model_ai: str,
-        project_id: str,
-        region: str,
         embedding_manager: EmbeddingsManager,
         chunks_in_context: int,
         chunks_similarity_treshold: float,
     ) -> None:
-        vertexai.init(project=project_id, location=region)
         self.__generative_multimodal_model = GenerativeModel(model_ai)
         self.__embedding_manager = embedding_manager
         self.__chunks_similarity_treshold = chunks_similarity_treshold
@@ -51,8 +40,7 @@ class RAG:
         return response.text
 
     def ingest_pdf(self, filename: str, user_id: int) -> None:
-
-        docs = PyPDFLoader(file_path=filename).load()
+        docs = PyPDFLoader(file_path=filename)
         self.__embedding_manager.ingest_pdf(
             docs,
             user_id,
@@ -94,3 +82,6 @@ class RAG:
             )
         )
         return json.loads("\n".join(response.text.split("\n")[1:-1]))
+
+    def get_simple_answer(self, question: str) -> str:
+        return self.__generative_multimodal_model.generate_content(question).text

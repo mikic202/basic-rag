@@ -1,14 +1,14 @@
 from langchain_community.vectorstores import Chroma
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_community.vectorstores.utils import filter_complex_metadata
-from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 import os
 
-from embeder import Embedder
+from embeder.embeder import Embedder
+from embeder.embedings_mamager import EmbeddingsManager
 
 
-class EmbeddingsManager:
+class LocalEmbeddingsManager(EmbeddingsManager):
     def __init__(
         self,
         store_directory: str,
@@ -16,10 +16,11 @@ class EmbeddingsManager:
         chunk_size: int,
         chunk_overlap: int,
     ) -> None:
-        self.__embedder = embedder
         self.__store_directory = store_directory
-        self.text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=chunk_size, chunk_overlap=chunk_overlap
+        super().__init__(
+            embedder=embedder,
+            chunk_size=chunk_size,
+            chunk_overlap=chunk_overlap,
         )
 
     def get_closest_chunks(
@@ -47,7 +48,9 @@ class EmbeddingsManager:
             embedding_function=self.__embedder,
             persist_directory=f"{self.__store_directory}/{user_id}",
         )
-        chunks = filter_complex_metadata(self.text_splitter.split_documents(file))
+        chunks = filter_complex_metadata(
+            self.text_splitter.split_documents(file.load())
+        )
         for chunk in chunks:
             chunk.metadata["source"] = os.path.basename(file.source)
         vector_store.add_documents(chunks)

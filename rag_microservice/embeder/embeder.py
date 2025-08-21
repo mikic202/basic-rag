@@ -1,16 +1,12 @@
-import os
+from vertexai.language_models import TextEmbeddingModel
 
-from google import genai
-from google.genai.types import EmbedContentConfig
-
-from google.genai.types import HttpOptions
-
-from request_controller import RequestController
+from embeder.request_controller import RequestController
+from langchain_core.embeddings import Embeddings
 
 SAFE_MARGIN = 18000
 
 
-class Embedder:
+class Embedder(Embeddings):
     DOCUMENT_RETRIEVAL_TASK_TYPE = "RETRIEVAL_DOCUMENT"
     QUERY_RETRIEVAL_TASK_TYPE = "RETRIEVAL_QUERY"
 
@@ -20,8 +16,7 @@ class Embedder:
         embedding_dimension: int,
     ) -> None:
         self.__dimension = embedding_dimension
-        self.client = genai.Client(http_options=HttpOptions(api_version="v1"))
-        self.model = embedding_model
+        self.__model = TextEmbeddingModel.from_pretrained(embedding_model)
         self.request_controller = RequestController()
 
     def count_tokens_estimate(self, text: str) -> int:
@@ -52,22 +47,11 @@ class Embedder:
         return [embedding.values for embedding in response]
 
     def embed_document_chunks(self, document_chunks_batch: list) -> list[list[float]]:
-        return self.client.models.embed_content(
-            model=self.model,
-            contents=document_chunks_batch,
-            config=EmbedContentConfig(
-                task_type=self.DOCUMENT_RETRIEVAL_TASK_TYPE,
-                output_dimensionality=self.__dimension,
-            ),
-        ).embeddings
+        return self.__model.get_embeddings(
+            document_chunks_batch, output_dimensionality=self.__dimension
+        )
 
     def embed_query(self, question: str) -> list[float]:
-        response = self.client.models.embed_content(
-            model=self.model,
-            contents=[question],
-            config=EmbedContentConfig(
-                task_type=self.QUERY_RETRIEVAL_TASK_TYPE,
-                output_dimensionality=self.__dimension,
-            ),
-        )
-        return response.embeddings[0].values
+        return self.__model.get_embeddings(
+            [self.preprocess_text(question)], output_dimensionality=self.__dimension
+        )[0].values
